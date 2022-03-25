@@ -2,7 +2,6 @@
 # AS peering information inferred from Oregon route-views BGP data, from March 31 2001
 # Nodes: 10670 Edges: 22002
 # FromNodeId	ToNodeId
-
 1239	17065
 1239	17075
 1239	17094

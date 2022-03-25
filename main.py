@@ -1,10 +1,9 @@
 import copy
 
 import networkx as nx
-import numpy
 import sys
-
-from matplotlib import pyplot as plt
+import numpy as np
+from webweb import Web
 
 
 def DFS(g,v,visited): #DFS to count nodes
@@ -40,7 +39,11 @@ def clustering(g,id):
                     c+=1
                     counted.append(edge)
     val = copy.deepcopy(calcdegree(g, id))
-    coeff = 2*(float(c))/((val-1)*(val))
+    bottom = ((val-1)*(val))
+    if bottom == 0:
+        coeff = 0
+    else:
+        coeff = 2*(float(c))/bottom
     return coeff
 
 def betweenness(g,id):
@@ -61,7 +64,7 @@ def betweenness(g,id):
     return sum
 
 def adjacency(g):
-
+    #returns a sorted matrix with newly mapped vals
     vals = []
     for i in range(len(g.nodes())):
         vals.append(i)
@@ -75,12 +78,20 @@ def adjacency(g):
         m[edge[0]][edge[1]] = 1
         m[edge[1]][edge[0]] = 1
 
-    return m
+    return m, labels
 def prestige(m):
-    return False
+    vector = np.ones(len(m))
+    lastv = np.ones(len(m))
+    i = 0
+    while i < 1000:
+        lastv = vector
+        vector = np.dot(m,lastv)
+        i+=1
+        print(vector)
+    return vector
 def main():
     sys.setrecursionlimit(10000)
-    f = open("oregon1.txt", 'r')
+    f = open("oregon1_010331.txt", 'r')
     g = nx.Graph()
     f.readline()
     f.readline()
@@ -90,16 +101,34 @@ def main():
         arr = line.split("\t")
         arr[1] = arr[1].strip("\n")
         g.add_edge(int(arr[0].strip()),int(arr[1].strip()))
-    ##print(num_verts(g))
-   # print(g.degree[1])
-    #print(calcdegree(g, 1))
-   # print(nx.clustering(g,1))
-  #  print(clustering(g,1))
-    print(nx.betweenness_centrality(g,10))
-    #print(betweenness(g,10000))
-    nx.draw_planar(g)
+    edge_list = []
+    for edge in g.edges:
+        edge_list.append([edge[0],edge[1]])
+    degrees = []
+    edge_list = edge_list[-4000:]
+    web = Web(edge_list)
+    web.show()
+    for node in g.nodes:
+        degrees.append(calcdegree(g,node))
+    x = dict(zip(g.nodes,degrees))
+    x = {k: v for k, v in sorted(x.items(), key=lambda item: item[1])}
+    print("Top 10 nodes by highest degree in reverse order, nodes come first")
+    print(list(x.items())[-10:])
+    x = {k: v for k, v in sorted((nx.betweenness_centrality(g, 100).items()), key=lambda item: item[1])}
+    print("Top 10 nodes by betweeness in reverse order, nodes come first")
+    print(list(x.items())[-10:])
+    print("Top 10 nodes by clustering in reverse order, nodes come first")
+    cls = []
+    for node in g.nodes:
+        cls.append(clustering(g, node))
+    x = dict(zip(g.nodes, cls))
+    x = {k: v for k, v in sorted(x.items(), key=lambda item: item[1])}
+    print(list(x.items())[-10:])
+    print("Top 10 nodes by prestige in reverse order, nodes come first")
+    x = {k: v for k, v in sorted(nx.eigenvector_centrality(g).items(), key=lambda item: item[1])}
+    print(list(x.items())[-10:])
+    print("Top 10 nodes by pagerank in reverse order, nodes come first")
+    x = {k: v for k, v in sorted(nx.pagerank(g).items(), key=lambda item: item[1])}
+    print(list(x.items())[-10:])
 
-    plt.show()
-    #adj = adjacency(g)
-    #print(nx.eigenvector_centrality(g))
 main()
